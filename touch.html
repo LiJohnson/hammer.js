@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>touch</title>
+	<script type="text/javascript" src="jquery.js"></script>
+	<script type="text/javascript" src="hammer.js"></script>
+	<style>
+	.box{ width: 50px;height: 50px; margin: 50px auto;background: blue;}
+	</style>
+</head>
+<body>
+	<div class="box"></div>
+</body>
+
+<script>
+	var A = function($el){
+		var transform = {x:0,y:0,r:1};
+		var transformOffset = {};
+
+		var reqAnimationFrame = (function() {
+            return window[Hammer.prefixed(window, "requestAnimationFrame")] || function(callback) {
+                setTimeout(callback, 1000 / 60);
+            }
+        })();
+
+        var update = function(){
+        	$el.css("transform" , "translateX("+transform.x+"px) translateY("+transform.y+"px) " + "scale("+transform.r+")" )
+	        //reqAnimationFrame(update);
+        }
+        reqAnimationFrame(update);
+
+        this.move = function(x,y){
+        	transform.x = transformOffset.x + x ;
+        	transform.y = transformOffset.y + y ;
+        	update();
+        };
+
+        this.scale = function(scale){
+        	transform.r = transformOffset.r * scale;
+        }
+        this.updateOffset = function(){
+        	transformOffset.x = transform.x ;
+        	transformOffset.y = transform.y ;
+        	transformOffset.r = transform.r ;
+        }
+	}
+	var mc = new Hammer($(".box")[0]);
+	var a = window.a = new A($(".box"));
+
+	mc.get("pinch").set({enable:4});
+
+	mc.on("panmove",function(e){
+		a.move(e.deltaX,e.deltaY);
+		console.log("panmove",e);
+	}).on("pinch" , function(e){
+		a.scale(e.scale);
+		console.log("pinch",e);
+
+	}).on("panstart pinchstart" , function(){
+		a.updateOffset();
+	});
+
+</script>
+
+</html>
