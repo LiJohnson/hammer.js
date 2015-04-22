@@ -3,17 +3,29 @@
 <head>
 	<meta charset="UTF-8">
 	<title>touch</title>
+	<meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">
+
 	<script type="text/javascript" src="jquery.js"></script>
 	<script type="text/javascript" src="hammer.js"></script>
 	<style>
-	.box{ width: 50px;height: 50px; margin: 50px auto;background: blue;}
+	.box{ width: 100px;height: 100px; margin: 50px auto;background: blue;}
+	.p{position: absolute;width:2px;height:2px;background:red;}
+	.control{position:fixed;bottom:0;right:0;}
+	.control a {  padding: 5px;  margin: 5px;  font-size: 50px;  text-decoration: none;}
 	</style>
 </head>
 <body>
 	<div class="box"></div>
+	<div class="control"><a href="javascript:;" class="zoom-out">+</a><a href="javascript:;" class="zoom-in">-</a></div>
 </body>
 
 <script>
+	var debug = (function(){
+		var $p = $("<div class=p ></div>").appendTo("body");
+		return function(p){
+			$p.css( { left : p.x || p.left , top : p.y || p.top });
+		}
+	})();
 	var A = function($el){
 		var transform = {x:0,y:0,r:1};
 		var transformOffset = {};
@@ -26,14 +38,13 @@
 
         var update = function(){
         	$el.css("transform" , "translateX("+transform.x+"px) translateY("+transform.y+"px) " + "scale("+transform.r+")" )
-	        //reqAnimationFrame(update);
+	        reqAnimationFrame(update);
         }
         reqAnimationFrame(update);
 
         this.move = function(x,y){
         	transform.x = transformOffset.x + x ;
         	transform.y = transformOffset.y + y ;
-        	update();
         };
 
         this.scale = function(scale){
@@ -59,6 +70,17 @@
 
 	}).on("panstart pinchstart" , function(){
 		a.updateOffset();
+	}).on("doubletap",function(e){
+		debug(e.center)
+		console.log("pan tap",e);
+	});
+
+	$(".control").on("click",".zoom-out",function(){
+		a.updateOffset();
+		a.scale(1.1);
+	}).on("click",".zoom-in",function(){
+		a.updateOffset();
+		a.scale(0.9);
 	});
 
 </script>
