@@ -10,6 +10,7 @@
 	<style>
 	.box{ width: 100px;height: 100px; margin: 50px auto;background: blue;}
 	.p{position: absolute;width:2px;height:2px;background:red;}
+	.p.g{background:green;}
 	.control{position:fixed;bottom:0;right:0;}
 	.control a {  padding: 5px;  margin: 5px;  font-size: 50px;  text-decoration: none;}
 	</style>
@@ -21,7 +22,7 @@
 
 <script>
 	var debug = (function(){
-		var $p = $("<div class=p ></div>").appendTo("body");
+		var $p = $("<div class='p g' ></div>").appendTo("body");
 		return function(p){
 			$p.css( { left : p.x || p.left , top : p.y || p.top });
 		}
@@ -29,7 +30,8 @@
 	var A = function($el){
 		var transform = {x:0,y:0,r:1};
 		var transformOffset = {};
-
+		var pos = {};
+		var $p = $("<div class=p ></div>").appendTo($el)
 		var reqAnimationFrame = (function() {
             return window[Hammer.prefixed(window, "requestAnimationFrame")] || function(callback) {
                 setTimeout(callback, 1000 / 60);
@@ -37,7 +39,8 @@
         })();
 
         var update = function(){
-        	$el.css("transform" , "translateX("+transform.x+"px) translateY("+transform.y+"px) " + "scale("+transform.r+")" )
+        	$el.css("transform" , "translateX("+transform.x+"px) translateY("+transform.y+"px) " + "scale("+transform.r+")" );
+        	$p.css( { left : pos.x , top : pos.y });
 	        reqAnimationFrame(update);
         }
         reqAnimationFrame(update);
@@ -45,15 +48,28 @@
         this.move = function(x,y){
         	transform.x = transformOffset.x + x ;
         	transform.y = transformOffset.y + y ;
+        	
         };
 
-        this.scale = function(scale){
+        this.scale = function(scale,p){
         	transform.r = transformOffset.r * scale;
+
+        	pos.x1 = pos.x2 - pos.offsetx*0.5+ pos.offsetx*0.5 * transform.r;
+        	pos.y1 = pos.y2 - pos.offsety*0.5 + pos.offsety*0.5 * transform.r;
+
+        	pos.x = pos.x1 + transform.x - pos.ox;
+        	pos.y = pos.y1 + transform.y - pos.oy;
+
         }
         this.updateOffset = function(){
         	transformOffset.x = transform.x ;
         	transformOffset.y = transform.y ;
         	transformOffset.r = transform.r ;
+        }
+
+        this.setPos = function(newPos,e){
+        	pos.x1 = pos.x = e.offsetX;
+        	pos.y1 = pos.y = e.offsetY;
         }
 	}
 	var mc = new Hammer($(".box")[0]);
@@ -71,16 +87,17 @@
 	}).on("panstart pinchstart" , function(){
 		a.updateOffset();
 	}).on("doubletap",function(e){
-		debug(e.center)
+		debug(e.center);
+		a.setPos(e.center,e.pointers[0]);
 		console.log("pan tap",e);
 	});
 
 	$(".control").on("click",".zoom-out",function(){
 		a.updateOffset();
-		a.scale(1.1);
+		a.scale(1.1,{x:"50%",y:"50%"});
 	}).on("click",".zoom-in",function(){
 		a.updateOffset();
-		a.scale(0.9);
+		a.scale(0.9,{x:"50%",y:"50%"});
 	});
 
 </script>
